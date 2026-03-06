@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from datetime import datetime  
 
 from ptracker.config import DATA_FILE
 from tracker_core.models import Task
@@ -108,3 +109,79 @@ def update_task(updated_task):
             return True
 
     return False
+
+
+def pause_task(task_id):
+    """
+    Pause a running task.
+    """
+    data = load_data()
+
+    for task in data["tasks"]:
+        if task["id"] == task_id:
+            if task["status"] != "running":
+                return None
+
+            now = datetime.now().isoformat()
+
+            if task["sessions"] and task["sessions"][-1]["end"] is None:
+                task["sessions"][-1]["end"] = now
+
+            task["status"] = "paused"
+            save_data(data)
+            return task
+
+    return None
+
+
+def resume_task(task_id):
+    """
+    Resume a paused task by creating a new session.
+    """
+    data = load_data()
+
+    for task in data["tasks"]:
+        if task["id"] == task_id:
+            if task["status"] != "paused":
+                return None
+
+            now = datetime.now().isoformat()
+
+            task["sessions"].append({
+                "start": now,
+                "end": None
+            })
+
+            task["status"] = "running"
+            save_data(data)
+            return task
+
+    return None
+
+
+def finish_task(task_id, completion_percent, end_time=None):
+    """
+    Finish a task and close the last open session.
+    """
+    data = load_data()
+
+    for task in data["tasks"]:
+        if task["id"] == task_id:
+            if task["status"] not in ["running", "paused"]:
+                return None
+
+            if end_time is None:
+                end_time = datetime.now().isoformat()
+
+            if task["status"] == "running":
+                if task["sessions"] and task["sessions"][-1]["end"] is None:
+                    task["sessions"][-1]["end"] = end_time
+
+            task["end_time"] = end_time
+            task["completion_percent"] = completion_percent
+            task["status"] = "completed"
+
+            save_data(data)
+            return task
+
+    return None
