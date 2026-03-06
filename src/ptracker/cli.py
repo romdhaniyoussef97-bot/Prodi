@@ -1,6 +1,12 @@
 from datetime import datetime
 
-from tracker_core.storage import add_task, get_ongoing_tasks
+from tracker_core.storage import (
+    add_task,
+    get_ongoing_tasks,
+    pause_task,
+    resume_task,
+    finish_task
+)
 from ptracker.logger import log_info, log_warning
 
 
@@ -90,6 +96,174 @@ def view_ongoing_tasks():
 
     for task in tasks:
         print(f"ID: {task['id']} | {task['category']} | {task['name']} | Status: {task['status']}")
+
+    while True:
+        choice = input("\nEnter task ID to manage it, or 0 to return: ").strip()
+
+        if choice == "0":
+            return
+
+        try:
+            task_id = int(choice)
+        except ValueError:
+            print("Invalid ID. Please enter a number.")
+            continue
+
+        selected_task = None
+
+        for task in tasks:
+            if task["id"] == task_id:
+                selected_task = task
+                break
+
+        if selected_task is None:
+            print("Task not found. Please try again.")
+            continue
+
+        manage_ongoing_task(selected_task)
+        return
+
+    
+def get_task_duration_minutes(task):
+    total_minutes = 0
+
+    for session in task["sessions"]:
+        start = datetime.fromisoformat(session["start"])
+
+        if session["end"] is not None:
+            end = datetime.fromisoformat(session["end"])
+        else:
+            end = datetime.now()
+
+        total_minutes += int((end - start).total_seconds() / 60)
+
+    return total_minutes
+
+
+def show_task_status(task):
+    duration = get_task_duration_minutes(task)
+
+    print("\nTask Status")
+    print("--------------------------------")
+    print(f"ID: {task['id']}")
+    print(f"Category: {task['category']}")
+    print(f"Name: {task['name']}")
+    print(f"Status: {task['status']}")
+    print(f"Current tracked time: {duration} minutes")
+
+
+def ask_finish_time():
+    print("\nIs this the actual time you finished?")
+    print("1. Yes")
+    print("2. No")
+
+    choice = input("> ").strip()
+
+    if choice == "1":
+        return None
+
+    if choice == "2":
+        user_time = input("Enter the approximate finish time (HH:MM): ").strip()
+
+        try:
+            hours, minutes = user_time.split(":")
+            now = datetime.now()
+            custom_time = now.replace(
+                hour=int(hours),
+                minute=int(minutes),
+                second=0,
+                microsecond=0
+            )
+            return custom_time.isoformat()
+        except ValueError:
+            print("Invalid time format. Current time will be used.")
+            return None
+
+    print("Invalid choice. Current time will be used.")
+    return None
+
+
+def ask_completion_percentage():
+    print("\nDid you achieve your goal for this task?")
+    print("1. Yes")
+    print("2. No")
+
+    choice = input("> ").strip()
+
+    if choice == "1":
+        return 100
+
+    if choice == "2":
+        while True:
+            percent = input("Enter completion percentage (0-99): ").strip()
+
+            try:
+                percent = int(percent)
+                if 0 <= percent <= 99:
+                    return percent
+            except ValueError:
+                pass
+
+            print("Invalid percentage. Please enter a number between 0 and 99.")
+
+    print("Invalid choice. Defaulting to 100%.")
+    return 100
+
+
+def manage_ongoing_task(task):
+    while True:
+        print("\nTask Actions")
+        print("--------------------------------")
+        print("1. Pause task")
+        print("2. Resume task")
+        print("3. Finish task")
+        print("4. Show status")
+        print("0. Return")
+
+        choice = input("> ").strip()
+
+        if choice == "0":
+            return
+
+        elif choice == "1":
+            updated_task = pause_task(task["id"])
+
+            if updated_task is None:
+                print("This task cannot be paused.")
+            else:
+                log_info(f"Task paused: {task['id']}")
+                print("Task paused successfully.")
+                task = updated_task
+
+        elif choice == "2":
+            updated_task = resume_task(task["id"])
+
+            if updated_task is None:
+                print("This task cannot be resumed.")
+            else:
+                log_info(f"Task resumed: {task['id']}")
+                print("Task resumed successfully.")
+                task = updated_task
+
+        elif choice == "3":
+            end_time = ask_finish_time()
+            completion_percent = ask_completion_percentage()
+
+            updated_task = finish_task(task["id"], completion_percent, end_time)
+
+            if updated_task is None:
+                print("This task cannot be finished.")
+            else:
+                log_info(f"Task finished: {task['id']}")
+                print("Task finished successfully.")
+                return
+
+        elif choice == "4":
+            show_task_status(task)
+
+        else:
+            log_warning("Invalid task action selected.")
+            print("Invalid choice. Please try again.")
 
 
 def run_cli():
