@@ -1,0 +1,25 @@
+{
+    "tasks": [
+        {
+            "id": 1,
+            "category": "Study",
+            "name": "Python project",
+            "expected_minutes": 90,
+            "start_time": "2026-03-06T22:52:30.439004",
+            "end_time": "2026-03-06T23:29:00",
+            "status": "completed",
+            "completion_percent": 80,
+            "sessions": [
+                {
+                    "start": "2026-03-06T22:52:30.439004",
+                    "end": "2026-03-06T23:27:31.973539"
+                },
+                {
+                    "start": "2026-03-06T23:28:35.798923",
+                    "end": "2026-03-06T23:29:00"
+                }
+            ]
+        }
+    ],
+    "notes": []
+}
