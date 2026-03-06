@@ -5,9 +5,17 @@ from tracker_core.storage import (
     get_ongoing_tasks,
     pause_task,
     resume_task,
-    finish_task
+    finish_task,
+    load_data
 )
 from ptracker.logger import log_info, log_warning
+
+from tracker_core.reports import (
+    generate_daily_report,
+    generate_weekly_report,
+    generate_monthly_report
+)
+
 
 
 CATEGORIES = {
@@ -266,6 +274,44 @@ def manage_ongoing_task(task):
             print("Invalid choice. Please try again.")
 
 
+
+def view_reports():
+    while True:
+        print("\nReports")
+        print("--------------------------------")
+        print("1. Daily report")
+        print("2. Weekly report")
+        print("3. Monthly report")
+        print("0. Return")
+
+        choice = input("> ").strip()
+
+        if choice == "0":
+            return
+
+        data = load_data()
+
+        if choice == "1":
+            report = generate_daily_report(data)
+            print(report)
+            log_info("Daily report viewed.")
+
+        elif choice == "2":
+            report = generate_weekly_report(data)
+            print(report)
+            log_info("Weekly report viewed.")
+
+        elif choice == "3":
+            report = generate_monthly_report(data)
+            print(report)
+            log_info("Monthly report viewed.")
+
+        else:
+            log_warning("Invalid report menu selection.")
+            print("Invalid choice. Please try again.")
+
+
+
 def run_cli():
     while True:
         show_main_menu()
@@ -279,7 +325,7 @@ def run_cli():
             view_ongoing_tasks()
 
         elif choice == "3":
-            print("\nReports feature coming soon.")
+            view_reports()
 
         elif choice == "4":
             print("\nGoodbye.")
