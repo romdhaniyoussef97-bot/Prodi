@@ -19,6 +19,22 @@
                     "end": "2026-03-06T23:29:00"
                 }
             ]
+        },
+        {
+            "id": 2,
+            "category": "Study",
+            "name": "Finishing README file",
+            "expected_minutes": 960,
+            "start_time": "2026-03-07T15:41:58.845486",
+            "end_time": null,
+            "status": "running",
+            "completion_percent": null,
+            "sessions": [
+                {
+                    "start": "2026-03-07T15:41:58.845486",
+                    "end": null
+                }
+            ]
         }
     ],
     "notes": []
